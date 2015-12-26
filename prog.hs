@@ -10,21 +10,27 @@ count (x:xs) v
 
 movex [] a s = []
 movex (x:xs) a s
-    | elem a x = moveNow x a s
-    | otherwise = x : (movex xs a s)
+    | elem a x = moveNow x a s : xs
+    | otherwise = x : movex xs a s
     where
       moveNow x a s
-        | s == 'l' = moveNow2 x a
+        | s == 'l' = moveNowLeft x a
+        | s == 'r' = reverse $ moveNowLeft (reverse x) a
         where
-            moveNow2 [] _ = []
-            moveNow2 (x:y:xs) a
-              | x == ' ' && y == a = a : x : moveNow2 (y:xs) a
-              | otherwise = x : moveNow2 (y:xs) a
+            moveNowLeft [x] _    = [x]
+            moveNowLeft (x:y:xs) a
+              | x == ' ' && y == a = a : moveNowLeft (x:xs) a
+              | otherwise = x : moveNowLeft (y:xs) a
 
 main :: IO ()
 main = do
     { content <- readFile "laud.txt"
     ; let lines = splitOn "\n" content
+    ; print (fancyPrint lines)
+    ; print (fancyPrint $ movex lines '1' 'l')
+    ; print (fancyPrint $ movex lines '1' 'r')
+    ; print (fancyPrint $ movex lines '3' 'r')
+    ; print (fancyPrint $ movex lines '3' 'l')
     ; print (fancyPrint lines)
     ; print (count lines '1')
     }
