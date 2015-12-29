@@ -27,21 +27,21 @@ movey (x:xs) a s
     | s == 'u' = transpose $ movex (transpose (x:xs)) a 'l'
     | s == 'd' = transpose $ movex (transpose (x:xs)) a 'r'
 
-gateFinderX (x:xs) = (length x) - 1
-gateFinderY [] = NULL
+gateFinderY [] = 0
 gateFinderY (x:xs)
-    | x[-1] == ' ' = 0
-    | otherwise = 1 + gateFinderY
+    | last x == ' ' = 0
+    | otherwise = 1 + gateFinderY xs
 
-checker (x:xs)
-  | (x:xs)[yGate][xGate] == '1' = True
+checker (x:xs) yGate
+  | last (x:xs) !! yGate == '1' = True
   | otherwise = False
+
 main :: IO ()
 main = do
     { content <- readFile "laud.txt"
-    ; let xGate = gateFinderX
-    ; let yGate = gateFinderY
     ; let lines = splitOn "\n" content
+    ; let yGate = gateFinderY lines
+    ; print(yGate)
     ; putStrLn (fancyPrint lines)
     ; let lines2 = movex lines '1' 'l'
     ; putStrLn (fancyPrint lines2)
