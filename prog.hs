@@ -27,19 +27,25 @@ movey (x:xs) a s
     | s == 'u' = transpose $ movex (transpose (x:xs)) a 'l'
     | s == 'd' = transpose $ movex (transpose (x:xs)) a 'r'
 
+gateFinderX (x:xs) = (length x) - 1
+gateFinderY [] = NULL
+gateFinderY (x:xs)
+    | x[-1] == ' ' = 0
+    | otherwise = 1 + gateFinderY
+
+checker (x:xs)
+  | (x:xs)[yGate][xGate] == '1' = True
+  | otherwise = False
 main :: IO ()
 main = do
     { content <- readFile "laud.txt"
+    ; let xGate = gateFinderX
+    ; let yGate = gateFinderY
     ; let lines = splitOn "\n" content
     ; putStrLn (fancyPrint lines)
-    ; putStrLn (fancyPrint $ movex lines '1' 'l')
-    ; putStrLn (fancyPrint $ movex lines '1' 'r')
-    ; putStrLn (fancyPrint $ movex lines '3' 'r')
-    ; putStrLn (fancyPrint $ movex lines '3' 'l')
-    ; putStrLn (fancyPrint $ movey lines '2' 'u')
-    ; putStrLn (fancyPrint $ movey lines '2' 'd')
-    ; putStrLn (fancyPrint $ movey lines '4' 'd')
-    ; putStrLn (fancyPrint $ movey lines '4' 'u')
-    ; putStrLn (fancyPrint lines)
+    ; let lines2 = movex lines '1' 'l'
+    ; putStrLn (fancyPrint lines2)
+    ; let lines3 = movex lines2 '3' 'r'
+    ; putStrLn (fancyPrint lines3)
     ; print(count lines '1')
     }
