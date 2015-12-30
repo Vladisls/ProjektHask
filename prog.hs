@@ -10,13 +10,16 @@ count (x:xs) v
   | elem v x = 1 + count xs v
   | otherwise = 0 + count xs v
 
+  
+
 play lines yGate a s
     | checker lines yGate==False = do hSetBuffering stdin NoBuffering
-                                      suund <- getChar
-                                      blokk <- getChar
                                       putStrLn(fancyPrint lines)
-                                      play (move lines a s) yGate blokk suund
-    | otherwise = putStrLn(fancyPrint lines)
+                                      putStr "tere1\n"
+                                      movementinfo <- getLine
+                                      putStrLn "tere2"
+                                      play (move lines a s) yGate (head movementinfo) (movementinfo !! 1)
+    | otherwise = putStrLn(fancyPrint lines ++ "tere3")
 
 
 move [] a s = []
@@ -43,6 +46,7 @@ movey [] a s = []
 movey (x:xs) a s
     | s == 'u' = transpose $ movex (transpose (x:xs)) a 'l'
     | s == 'd' = transpose $ movex (transpose (x:xs)) a 'r'
+    | otherwise = (x:xs)
 
 gateFinderY [] = 0
 gateFinderY (x:xs)
@@ -58,7 +62,7 @@ main = do
     { content <- readFile "laud.txt"
     ; let lines = splitOn "\n" content
     ; let yGate = gateFinderY lines
-    ; play lines yGate '0' 'r'
+    ; play lines yGate ' ' ' '
     ; let lines2 = movex lines '1' 'l'
     ; putStrLn (fancyPrint lines2)
     ; let lines3 = movex lines2 '3' 'r'
