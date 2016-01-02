@@ -1,11 +1,11 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 import Data.List.Split
 import Data.List as List
 import Data.Map as Map
 import Data.Set as Set
 import System.IO
 import Debug.Trace
-
-
 
 merge :: [a] -> [a] -> [a]
 merge xs     []     = xs
@@ -20,18 +20,34 @@ count (x:xs) v
   | elem v x = 1 + count xs v
   | otherwise = 0 + count xs v
 
-play lines yGate a s
-    | checker lines yGate==False = do hSetBuffering stdin NoBuffering
-                                      putStr "Hetkeseis on selline: \n"
-                                      putStrLn(fancyPrint lines)
-                                      putStr "Palun liigutage klotse käskudega (1r || 2r || (nr)(suund) )\n"
-                                      movementinfo <- getLine
-                                      putStr "Sisse loetud!\n"
-                                      putStrLn "Liigutan!\n"
-                                      let n = move lines a s
-                                      putStrLn(fancyPrint n)
-                                      play n yGate (head movementinfo) (movementinfo !! 1)
-    | otherwise = putStrLn((fancyPrint lines) ++ "tere3")
+checkMovement lines a s
+  | (count lines a)>1 && s == 'u' = True
+  | (count lines a)>1 && s == 'd' = True
+  | (count lines a)==1 && s == 'l' = True
+  | (count lines a)==1 && s == 'r' = True
+  | otherwise = False
+
+play lines yGate a s c
+    | c == False =do hSetBuffering stdin LineBuffering
+                     putStr "Hetkeseis on selline: \n"
+                     putStrLn(fancyPrint lines)
+                     putStr "Palun liigutage klotse käskudega (1r || 2r || (nr)(suund) )\n"
+                     movementinfo <- getLine
+                     putStr "Sisse loetud!\n"
+                     --linuxis sain tööle ilma sellise salvestamiseta
+                     --vajalik windowsi jaoks vist siis
+                     let k = head movementinfo
+                     let m = movementinfo !! 1
+                     let l = checkMovement lines k m
+                     if l
+                         then do putStrLn "Liigutan!\n"
+                                 let n = move lines k m
+                                 putStrLn(fancyPrint n)
+                                 let c = checker n yGate
+                                 play n yGate k m c
+                         else do putStrLn "Sisesta oiged liigutamise andmed!!\n"
+                                 play lines yGate a s c
+    | otherwise = putStrLn((fancyPrint lines) ++ "\nSinu voit!")
 
 move [] a s = []
 move (x:xs) a s
@@ -65,7 +81,7 @@ gateFinderY (x:xs)
     | otherwise = 1 + gateFinderY xs
 
 checker (x:xs) yGate
-    | last (x:xs) !! yGate == '0' = True
+    | last ((x:xs) !! yGate) == '0' = True
     | otherwise = False
 
 getBlocks [] = [] 
@@ -81,14 +97,25 @@ generateStates (x:xs) blocks
                           | 1==1 =  move x y 'l' : move x y 'r' : move x y 'u' : move x y 'd' : steps x ys
 
 fancyPrint2 [] = ""
-fancyPrint2 (x:xs) = (fancyPrint x) ++ fancyPrint2 xs
-
+fancyPrint2 (x:xs) = (fancyPrint x ++ "\n") ++ fancyPrint2 xs
+--lahendusalgoritmi idee igaks juhuks et meelest ära ei läheks.
+--Genereerib kõik lubatud seisundid, siis hakkab igast seisundist genereerima
+--samamoodi uuesti laiuti, ettevaatamisega otsinguga. Kui seisund juba olemas, 
+--siis puusse ei lisa, kui ei ole, lisab lõppu ja algortim jätkab tavapäraselt.
+--Iga seisundi juures võiks siis olla lõppoleku check ka enne kui järjekorda lisada.
+--
 
 main :: IO ()
 main = do
-    { content <- readFile "laud.txt"
+    { hSetBuffering stdin LineBuffering
+    ; putStr "Teretulemast mängima mängu UnblockMe!\n"
+    ; putStr "Kui soovite ise mängu mängida, kirjuta M ja vajuta enter,\n kui tahad vaadata, kuidas arvuti mängib,\n kirjuta ükskoik mida muud ja vajuta enter. \n"
+    ; content <- readFile "laud.txt"
     ; let lines = splitOn "\n" content
     ; let yGate = gateFinderY lines
+    ; playinfo <- getLine
+    ; if head playinfo == 'M' then play lines yGate ' ' ' ' False
+      else putStrLn("Siia siis arvuti enda mängimise funktsioon")
     ; print (getBlocks lines)
     ; let blocks = getBlocks lines
     ; let states = [lines,lines]
