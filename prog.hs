@@ -27,6 +27,17 @@ checkMovement lines a s
   | (count lines a)==1 && s == 'r' = True
   | otherwise = False
 
+checkMovementAI [] lines = []
+checkMovementAI (x:xs) lines
+  | (count lines x)>1 = ([x] ++ ['v']) : checkMovementAI xs lines
+  | (count lines x)==1 = ([x] ++ ['h']) : checkMovementAI xs lines
+  | otherwise = ([x] ++ ['o']) : checkMovementAI xs lines
+
+lookupAI [] a = 'o'
+lookupAI (x:xs) a
+  | x !! 0 == a = x !! 1
+  | otherwise = lookupAI xs a
+
 play lines yGate a s c
     | c == False =do hSetBuffering stdin LineBuffering
                      putStr "Hetkeseis on selline: \n"
@@ -80,30 +91,47 @@ gateFinderY (x:xs)
     | last x == ' ' = 0
     | otherwise = 1 + gateFinderY xs
 
+checker [] _ = False
 checker (x:xs) yGate
-    | last ((x:xs) !! yGate) == '0' = True
+    | last ((init (x:xs)) !! yGate) == '0' = True
     | otherwise = False
+
+checkerAI [] _ = False
+checkerAI (x:xs) yGate
+    | checker x yGate == True = True
+    | otherwise = checkerAI xs yGate
 
 getBlocks [] = [] 
 getBlocks (x:xs) 
-    | 1 == 1 = drop 4 (keys(fromListWith (+) [(c, 1) | c <- fancyPrint(x:xs)]))
+    | 1 == 1 = drop 3 (keys(fromListWith (+) [(c, 0) | c <- fancyPrint(x:xs)]))
 
-generateStates [] _ = []
-generateStates (x:xs) blocks
-    | 1==1 = x : steps x blocks
-                      where 
-                        steps x [] = []
-                        steps x (y:ys) 
-                          | 1==1 =  move x y 'l' : move x y 'r' : move x y 'u' : move x y 'd' : steps x ys
+moveAI [] a s movements = []
+moveAI (x:xs) a s movements
+    | s == 'l' && lookupAI movements a == 'h' = movex (x:xs) a s
+    | s == 'r' && lookupAI movements a == 'h' = movex (x:xs) a s
+    | s == 'u' && lookupAI movements a == 'v' = movey (x:xs) a s
+    | s == 'd' && lookupAI movements a == 'v' = movey (x:xs) a s
+    | otherwise = []
+
+generateStates [] _ _= []
+generateStates (x:xs) blocks movements
+    | x == [] = generateStates xs blocks movements
+    | elem x xs = generateStates xs blocks movements
+    | otherwise = (steps x blocks movements) ++ generateStates xs blocks movements
+        where 
+            steps x [] movements = []
+            steps x (y:ys) movements 
+                | 1==1 =  moveAI x y 'l' movements : moveAI x y 'r' movements : moveAI x y 'u' movements : moveAI x y 'd' movements : steps x ys movements
+
+playAI (x:xs) c blocks yGate movements
+    | c == False = do let c = checkerAI (x:xs) yGate
+                      let l = generateStates (x:xs) blocks movements
+                      putStrLn("tere")
+                      playAI l c blocks yGate movements
+    | otherwise = do putStrLn("lopp")
 
 fancyPrint2 [] = ""
 fancyPrint2 (x:xs) = (fancyPrint x ++ "\n") ++ fancyPrint2 xs
---lahendusalgoritmi idee igaks juhuks et meelest ära ei läheks.
---Genereerib kõik lubatud seisundid, siis hakkab igast seisundist genereerima
---samamoodi uuesti laiuti, ettevaatamisega otsinguga. Kui seisund juba olemas, 
---siis puusse ei lisa, kui ei ole, lisab lõppu ja algortim jätkab tavapäraselt.
---Iga seisundi juures võiks siis olla lõppoleku check ka enne kui järjekorda lisada.
---
 
 main :: IO ()
 main = do
@@ -113,14 +141,11 @@ main = do
     ; content <- readFile "laud.txt"
     ; let lines = splitOn "\n" content
     ; let yGate = gateFinderY lines
+    ; let blocks = getBlocks lines
+    ; let states = [lines]
+    ; let movements = checkMovementAI blocks lines
+    ; print(movements)
     ; playinfo <- getLine
     ; if head playinfo == 'M' then play lines yGate ' ' ' ' False
-      else putStrLn("Siia siis arvuti enda mängimise funktsioon")
-    ; print (getBlocks lines)
-    ; let blocks = getBlocks lines
-    ; let states = [lines,lines]
-    ; print blocks
-    ; print states
-    ; print (generateStates states blocks)
-    ; putStrLn(fancyPrint2 (generateStates states blocks) )
+      else playAI states False blocks yGate movements
     }
