@@ -7,7 +7,6 @@ import qualified Data.Set as Set
 import System.IO
 import Debug.Trace
 
-unique = Set.toList . Set.fromList
 
 merge :: [a] -> [a] -> [a]
 merge xs     []     = xs
@@ -100,7 +99,7 @@ checker (x:xs) yGate
 
 checkerAI [] _ = False
 checkerAI (x:xs) yGate
-    | checker x yGate == True = True
+    | checker x yGate = True
     | otherwise = checkerAI xs yGate
 
 
@@ -134,22 +133,32 @@ generateStates (x:xs) blocks movements
 fancyPrint2 [] = ""
 fancyPrint2 (x:xs) = (fancyPrint x ++ "\n") ++ fancyPrint2 xs
 
-playAI (x:xs) c blocks yGate movements finish
+playAI (x:xs) c blocks yGate movements finish kaasasOlevList
     | finish = do
                 let vastus = findWhere (x:xs)
                 putStrLn("Viimane seis oli : \n" ++ fancyPrint(vastus))
+                let eelnevVastus = elemIndex vastus kaasasOlevList
+                print(eelnevVastus)
+                print(1747 `div` 2)
+                putStrLn(fancyPrint(kaasasOlevList !! 1931))
+                putStrLn(fancyPrint(kaasasOlevList !! 483))
+                print(length kaasasOlevList)
                 finishIt vastus
     | c == False = do let c = checkerAI (x:xs) yGate
                       let l = removeDuplicates2 (List.filter (not . List.null) $ generateStates (x:xs) blocks movements)
+                      let l2 = generateStates (x:xs) blocks movements
+                      let kaasasOlevList2 = kaasasOlevList ++ l2
                       let f = checkForFinish l
-                      putStrLn("tere")
-                      playAI l c blocks yGate movements f
+                      putStrLn("Laiuti tase läbitud")
+                      playAI l c blocks yGate movements f kaasasOlevList2
     | otherwise = do 
-                    putStrLn("lopp")
+                    let vastus = findWhere (x:xs)
+                    putStrLn("Viimane seis oli : \n" ++ fancyPrint(vastus))
+                    putStrLn("Lahendus leitud")
                     where
                       finishIt x
                         | (checker x yGate) = do
-                            putStrLn("Jooksen lõpuni")
+                            putStrLn("Jooksen lopuni")
                         | otherwise = finishIt (movex x '0' 'r')
                       checkForFinish [] = False  
                       checkForFinish (x:xs)
@@ -162,10 +171,10 @@ sprintChecker (x:xs)
     | elem '0' x = sC x
     | otherwise = sprintChecker xs
         where
-          sC a = sC2 $ unique(List.filter (/=' ') a)        
+          sC a = sC2 $ nub(List.filter (/=' ') a)        
               where
                 sC2 y
-                  | y ==  "#0" = True
+                  | last y ==  '0' = True
                   | otherwise = False
 
 main :: IO ()
@@ -182,5 +191,5 @@ main = do
     ; print(movements)
     ; playinfo <- getLine
     ; if head playinfo == 'M' then play lines yGate ' ' ' ' False
-      else playAI states False blocks yGate movements False
+      else playAI states False blocks yGate movements False []
     }
