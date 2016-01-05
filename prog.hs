@@ -3,9 +3,11 @@
 import Data.List.Split
 import Data.List as List
 import Data.Map as Map
-import Data.Set as Set
+import qualified Data.Set as Set
 import System.IO
 import Debug.Trace
+
+unique = Set.toList . Set.fromList
 
 merge :: [a] -> [a] -> [a]
 merge xs     []     = xs
@@ -101,9 +103,15 @@ checkerAI (x:xs) yGate
     | checker x yGate == True = True
     | otherwise = checkerAI xs yGate
 
+
 getBlocks [] = [] 
 getBlocks (x:xs) 
     | 1 == 1 = drop 3 (keys(fromListWith (+) [(c, 0) | c <- fancyPrint(x:xs)]))
+
+removeDuplicates2 = List.foldl (\seen z -> if z `elem` seen
+                                      then seen
+                                      else seen ++ [z]) []
+
 
 moveAI [] a s movements = []
 moveAI (x:xs) a s movements
@@ -123,15 +131,34 @@ generateStates (x:xs) blocks movements
             steps x (y:ys) movements 
                 | 1==1 =  moveAI x y 'l' movements : moveAI x y 'r' movements : moveAI x y 'u' movements : moveAI x y 'd' movements : steps x ys movements
 
-playAI (x:xs) c blocks yGate movements
-    | c == False = do let c = checkerAI (x:xs) yGate
-                      let l = generateStates (x:xs) blocks movements
-                      putStrLn("tere")
-                      playAI l c blocks yGate movements
-    | otherwise = do putStrLn("lopp")
-
 fancyPrint2 [] = ""
 fancyPrint2 (x:xs) = (fancyPrint x ++ "\n") ++ fancyPrint2 xs
+
+playAI (x:xs) c blocks yGate movements
+    | sprintChecker x == True = finishIt x
+                                  where
+                                    finishIt x
+                                      | checker x == True = do
+                                                              putStrLn(fancyPrint2 (x:xs))
+                                                              putStrLn("lopp")
+                                      | otherwise = finishIt (movex x 'r')
+    | c == False = do let c = checkerAI (x:xs) yGate
+                      let l = removeDuplicates2 (List.filter (not . List.null) $ generateStates (x:xs) blocks movements)
+                      putStrLn("tere")
+                      playAI l c blocks yGate movements
+    | otherwise = do 
+                    putStrLn(fancyPrint2 (x:xs))
+                    putStrLn("lopp")
+
+sprintChecker [] = False
+sprintChecker (x:xs)
+    | elem '0' x = sC x
+        where
+          sC a = sC2 $ unique(List.filter (/=' ') a)
+              where
+                sC2 y
+                  | y ==  ['0'] = True
+                  | otherwise = False
 
 main :: IO ()
 main = do
