@@ -134,30 +134,38 @@ generateStates (x:xs) blocks movements
 fancyPrint2 [] = ""
 fancyPrint2 (x:xs) = (fancyPrint x ++ "\n") ++ fancyPrint2 xs
 
-playAI (x:xs) c blocks yGate movements
-    | sprintChecker x == True = finishIt x
-                                  where
-                                    finishIt x
-                                      | checker x == True = do
-                                                              putStrLn(fancyPrint2 (x:xs))
-                                                              putStrLn("lopp")
-                                      | otherwise = finishIt (movex x 'r')
+playAI (x:xs) c blocks yGate movements finish
+    | finish = do
+                let vastus = findWhere (x:xs)
+                putStrLn("Viimane seis oli : \n" ++ fancyPrint(vastus))
+                finishIt vastus
     | c == False = do let c = checkerAI (x:xs) yGate
                       let l = removeDuplicates2 (List.filter (not . List.null) $ generateStates (x:xs) blocks movements)
+                      let f = checkForFinish l
                       putStrLn("tere")
-                      playAI l c blocks yGate movements
+                      playAI l c blocks yGate movements f
     | otherwise = do 
-                    putStrLn(fancyPrint2 (x:xs))
                     putStrLn("lopp")
-
-sprintChecker [] = False
+                    where
+                      finishIt x
+                        | (checker x yGate) = do
+                            putStrLn("Jooksen lõpuni")
+                        | otherwise = finishIt (movex x '0' 'r')
+                      checkForFinish [] = False  
+                      checkForFinish (x:xs)
+                        | sprintChecker x = True
+                        | otherwise = checkForFinish xs
+                      findWhere (x:xs)
+                        | sprintChecker x = x
+                        | otherwise = findWhere xs
 sprintChecker (x:xs)
     | elem '0' x = sC x
+    | otherwise = sprintChecker xs
         where
-          sC a = sC2 $ unique(List.filter (/=' ') a)
+          sC a = sC2 $ unique(List.filter (/=' ') a)        
               where
                 sC2 y
-                  | y ==  ['0'] = True
+                  | y ==  "#0" = True
                   | otherwise = False
 
 main :: IO ()
@@ -174,5 +182,5 @@ main = do
     ; print(movements)
     ; playinfo <- getLine
     ; if head playinfo == 'M' then play lines yGate ' ' ' ' False
-      else playAI states False blocks yGate movements
+      else playAI states False blocks yGate movements False
     }
