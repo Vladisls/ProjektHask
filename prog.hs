@@ -5,6 +5,7 @@ import Data.List as List
 import Data.Map as Map
 import qualified Data.Set as Set
 import System.IO
+import Data.Maybe(fromMaybe)
 import Debug.Trace
 
 
@@ -131,23 +132,57 @@ generateStates (x:xs) blocks movements
                 | 1==1 =  moveAI x y 'l' movements : moveAI x y 'r' movements : moveAI x y 'u' movements : moveAI x y 'd' movements : steps x ys movements
 
 fancyPrint2 [] = ""
-fancyPrint2 (x:xs) = (fancyPrint x ++ "\n") ++ fancyPrint2 xs
+fancyPrint2 (x:xs) = (fancyPrint x ++ "\n") ++ "JÄRGMINE TASE !!! \n" ++fancyPrint2 xs
 
 playAI (x:xs) c blocks yGate movements finish kaasasOlevList
     | finish = do
                 let vastus = findWhere (x:xs)
                 putStrLn("Viimane seis oli : \n" ++ fancyPrint(vastus))
-                let eelnevVastus = elemIndex vastus kaasasOlevList
-                print(eelnevVastus)
-                print(1747 `div` 2)
-                putStrLn(fancyPrint(kaasasOlevList !! 1931))
-                putStrLn(fancyPrint(kaasasOlevList !! 483))
+
+                {-| Siin peaks jooksutama funktsiooni.
+
+                    Midagi sellist äkki ???
+
+                    showSteps i (x:xs) = 
+                         showSteps1 i xs
+                            where
+                              showSteps1 0 _ = []
+                              showSteps1 _ [] = []
+                              showSteps1 i (x:xs) = (x !! (i `div` 8)) ++ showSteps1 (i `div` 8) xs
+
+                    Probleem aga selles listis... Tundub väga kahtlane.
+                    Hetkel prindib välja listi esimeste kolme liikme suurused
+
+                    ########
+                    #      #
+                    #   2  #
+                    #00 2 1 
+                    #   2 1#
+                    #      #
+                    #      #
+                    ########
+
+                    Sellise laua puhul tulevad need : 204 72 12 
+                    12 - on arusaadav 1 seisust mindi iga klotsiga 4 suunas... 3 klotsi -> 3*4 = 12
+                    72 - Siin 72/12 = 6 --- Miks 6 ?? midagi juba valesti
+                    204 - 204/72 = 2.8...  ??? Igale seisule rakendati 2.8 sammu???
+
+                    Ärkan 8 paiku üles. Võiks skypes üle vaadata
+                    
+
+                 -}
+
                 print(length kaasasOlevList)
+                print(length $ kaasasOlevList !! 0)
+                print(length $ kaasasOlevList !! 1)
+                print(length $ kaasasOlevList !! 2)
+                let index = (List.elemIndex vastus (head kaasasOlevList))
                 finishIt vastus
+                
     | c == False = do let c = checkerAI (x:xs) yGate
                       let l = removeDuplicates2 (List.filter (not . List.null) $ generateStates (x:xs) blocks movements)
                       let l2 = generateStates (x:xs) blocks movements
-                      let kaasasOlevList2 = kaasasOlevList ++ l2
+                      let kaasasOlevList2 = l2 : kaasasOlevList
                       let f = checkForFinish l
                       putStrLn("Laiuti tase läbitud")
                       playAI l c blocks yGate movements f kaasasOlevList2
@@ -167,6 +202,8 @@ playAI (x:xs) c blocks yGate movements finish kaasasOlevList
                       findWhere (x:xs)
                         | sprintChecker x = x
                         | otherwise = findWhere xs
+
+                              
 sprintChecker (x:xs)
     | elem '0' x = sC x
     | otherwise = sprintChecker xs
